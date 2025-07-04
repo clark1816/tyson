@@ -2,7 +2,7 @@
 import subprocess
 import os
 import argparse
-import json
+import re
 from datetime import datetime
 
 def run_command(cmd, output_file=None):
@@ -37,11 +37,11 @@ def run_httpx(input_file, output_dir, detailed=False):
         print(f"[!] Input file {input_file} is empty or missing")
         return [], {}
     
-    # Base httpx command with rate limiting and browser-like User-Agent
-    base_cmd = f"httpx -l {input_file} -sc -fr -timeout 10 -t 50 -rl 50 -no-fallback -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'"
+    # Base httpx command with rate limiting
+    base_cmd = f"httpx -l {input_file} -sc -fr -timeout 10 -t 50 -rl 50"
     
     if detailed:
-        base_cmd += " -title -td -json"  # Add title, tech detection, and JSON output
+        base_cmd += " -title -td -json"  # Add title, tech detection, and JSON output for versions
     
     # Run httpx and capture output
     output = run_command(base_cmd)
@@ -51,15 +51,13 @@ def run_httpx(input_file, output_dir, detailed=False):
     status_codes = {}
     detailed_output = []
     
-    if detailed:
-        # Save raw JSON output for debugging
-        json_file = f"{output_dir}/raw_httpx.json"
-        with open(json_file, "w") as f:
-            f.write(output)
-        
-        for line in output.splitlines():
-            if line.strip():
+    for line in output.splitlines():
+        if line.strip():
+            if detailed:
+                # JSON output for detailed mode
                 try:
+                    # Extract URL, status code, title, and technologies from JSON
+                    import json
                     data = json.loads(line)
                     url = data.get("url", "").strip()
                     status_code = data.get("status_code", "Unknown")
@@ -79,17 +77,17 @@ def run_httpx(input_file, output_dir, detailed=False):
                             detailed_output.append(clean_line)
                 except json.JSONDecodeError:
                     continue
-    else:
-        for line in output.splitlines():
-            if line.strip() and " [" in line and "]" in line:
-                url = line.split(" [")[0].strip()
-                status_part = line.split(" [")[1].split("]")[0]
-                try:
-                    status_code = int(status_part) if status_part.isdigit() else status_part
-                    live_subdomains.append(url)
-                    status_codes[url] = status_code
-                except ValueError:
-                    continue
+            else:
+                # Non-detailed mode: parse standard output
+                if " [" in line and "]" in line:
+                    url = line.split(" [")[0].strip()
+                    status_part = line.split(" [")[1].split("]")[0]
+                    try:
+                        status_code = int(status_part) if status_part.isdigit() else status_part
+                        live_subdomains.append(url)
+                        status_codes[url] = status_code
+                    except ValueError:
+                        continue
     
     # Save clean URLs to file
     live_file = f"{output_dir}/live_subdomains.txt"
@@ -139,7 +137,6 @@ def main():
     print(f"\n💾 Clean URLs saved to: {output_dir}/live_subdomains.txt")
     if args.detailed:
         print(f"📋 Detailed results (excluding redirects) saved to: {output_dir}/detailed_results.txt")
-        print(f"📋 Raw JSON output saved to: {output_dir}/raw_httpx.json")
 
 if __name__ == "__main__":
     main()

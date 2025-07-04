@@ -1,0 +1,2 @@
+1. go is required 
+2. assetfinder and subfinder are required. 
