@@ -19,3 +19,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Code of Conduct
+
+The Tyson toolkit is designed for **ethical bug bounty hunting** within legal and authorized scopes (e.g., YesWeHack programs like `*.doctolib.fr`). Users must:
+- Only use the toolkit on targets you have explicit permission to test.
+- Follow bug bounty program rules (e.g., HackerOne, Bugcrowd).
+- Not engage in unauthorized access, data theft, or malicious activities.
+
+Misuse of this toolkit for illegal activities is strictly prohibited. The author (clark1816) is not responsible for any misuse, as per the MIT License.
