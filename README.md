@@ -26,3 +26,18 @@
   go install github.com/tomnomnom/assetfinder@latest
   sudo apt install gobuster
   go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+
+🧰 Subdomain Enumeration Usage
+🔹 Basic Usage
+
+python3 subdomain_enum.py -t example.com
+
+This will:
+
+    Run subfinder, assetfinder, crt.sh, and gobuster
+
+    Combine results and remove duplicates
+
+    Save output to a timestamped directory under results/
+
+    Output file: results/example.com_YYYY-MM-DD_HH-MM-SS/domains.txt
