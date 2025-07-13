@@ -111,36 +111,6 @@ The tool includes built-in rate limiting (50 requests/sec) to:
 - Reduce the likelihood of being blocked
 - Maintain ethical reconnaissance practices
 
-## Command Reference
-
-### Subdomain Enumeration
-```bash
-python3 subdomain_enum.py <domain>
-```
-
-### Live Checking - Basic
-```bash
-python3 unified_live_check.py -t <domain> -i <input-file>
-```
-
-### Live Checking - Detailed
-```bash
-python3 unified_live_check.py -t <domain> -i <input-file> -d
-```
-
-## Example Workflow
-
-```bash
-# 1. Discover subdomains
-python3 subdomain_enum.py example.com
-
-# 2. Check which ones are live (basic)
-python3 unified_live_check.py -t example.com -i domains.txt
-
-# 3. Or get detailed analysis
-python3 unified_live_check.py -t example.com -i domains.txt -d
-```
-
 ## Requirements
 
 - Python 3.x
