@@ -53,13 +53,23 @@ def run_assetfinder(domain):
         return []
 
 def run_crtsh(domain):
-    """Fetch subdomains from crt.sh using curl."""
+    """Fetch subdomains from crt.sh using curl with recursive JSON parsing."""
     print("🔍 Running crt.sh...")
-    crtsh_cmd = f"curl -s 'https://crt.sh/?q=%.{domain}&output=json' | jq -r '.[].name_value' | grep -Po '(\\w+\\.\\w+\\.\\w+)' | sort -u"
-    results = run_command(crtsh_cmd)
-    unique_results = list(set(results))
-    print(f"[+] crt.sh found {len(unique_results)} unique subdomains")
-    return unique_results
+    crtsh_cmd = f"curl -s 'https://crt.sh/?q=%.{domain}&output=json' | jq -r '..[].name_value' | grep -Po '(\\w+\\.\\w+\\.\\w+)' | sort -u"
+    try:
+        results = run_command(crtsh_cmd)
+        if not results:
+            print("[!] No results or error from crt.sh command")
+            return []
+        unique_results = list(set(line for line in results if line))
+        print(f"[+] crt.sh found {len(unique_results)} unique subdomains")
+        return unique_results
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Error running crt.sh: {e.stderr}")
+        return []
+    except FileNotFoundError as e:
+        print(f"[!] Required tool missing for crt.sh: {e}")
+        return []
 
 def run_gobuster(domain, wordlists, output_dir):
     """Run gobuster with multiple wordlists in line-by-line format."""

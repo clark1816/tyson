@@ -151,3 +151,15 @@ Make sure your Go bin directory is in your PATH:
 ```bash
 export PATH=$PATH:~/go/bin
 ```
+Example Usages
+
+    Subdomain Enumeration:
+        python tyson.py -s tesla.com
+        Saves to results/tesla.com_<timestamp>/domains.txt.
+    Live Check (Basic):
+        python tyson.py -l -i results/tesla.com_<timestamp>/domains.txt
+        Infers tesla.com from the input file.
+    Live Check (Detailed):
+        python tyson.py -l -d -i results/tesla.com_<timestamp>/domains.txt
+    Web Crawl:
+        python tyson.py -wc -i results/tesla.com_<timestamp>/live_subdomains.txt
