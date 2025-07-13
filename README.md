@@ -38,42 +38,7 @@ This will:
 - Save the unique subdomains to `domains.txt`
 - Print summary statistics and the list of subdomains to your terminal
 
-### Step 2: Live Subdomain Checking
 
-After generating the subdomain list, use the unified live check script:
-
-#### Basic Live Checking
-
-```bash
-python3 unified_live_check.py -t <target-domain> -i domains.txt
-```
-
-**Example:**
-
-```bash
-python3 unified_live_check.py -t canterbury.ac.nz -i domains.txt
-```
-
-This will:
-- Check all subdomains for live status
-- Save clean URLs to `live_subdomains.txt`
-- Show status code summary
-- Apply rate limiting (50 requests/sec) to be respectful to target servers
-
-#### Detailed Analysis Mode
-
-For comprehensive reconnaissance with technology detection:
-
-```bash
-python3 unified_live_check.py -t <target-domain> -i domains.txt -d
-```
-
-**The detailed mode (`-d` flag) provides:**
-- Page titles for each live subdomain
-- Technology detection (frameworks, CMS, servers, etc.)
-- Version information when available
-- Excludes redirects (301/302) for cleaner results
-- Saves detailed analysis to `detailed_results.txt`
 
 ## Output Structure
 
