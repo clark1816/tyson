@@ -16,12 +16,10 @@ def run_command(cmd, output_file=None):
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
         if output_file:
-            with open(output_file, "w") as f:
-                f.write(result.stdout)
+            output_file.write_text(result.stdout)
         return result.stdout.splitlines()
     except subprocess.CalledProcessError as e:
-        print(f"[!] Error running '{cmd}': {e}")
-        print(f"[!] stderr: {e.stderr}")
+        print(f"[!] Error running '{cmd}': {e.stderr}")
         return []
     except FileNotFoundError:
         print(f"[!] Tool not found for '{cmd}'. Ensure it’s installed.")
@@ -58,13 +56,27 @@ def run_assetfinder(domain):
         return []
 
 def run_crtsh(domain):
-    """Fetch subdomains from crt.sh using curl."""
+    """Fetch subdomains from crt.sh using curl with corrected command."""
     print("🔍 Running crt.sh...")
-    crtsh_cmd = f"curl -s 'https://crt.sh/?q=%.{domain}&output=json' | jq -r '.[].name_value' | grep -Po '(\\w+\\.\\w+\\.\\w+)' | sort -u"
-    results = run_command(crtsh_cmd)
-    unique_results = list(set(results))
-    print(f"[+] crt.sh found {len(unique_results)} unique subdomains")
-    return unique_results
+    temp_file = Path(tempfile.gettempdir()) / "crtsh.txt"
+    crtsh_cmd = f"curl -s 'https://crt.sh/?q=%.{domain}&output=json' | jq -r '.[].name_value' | grep -Po '(\\w+\\.\\w+\\.\\w+)$' | sort -u > {temp_file}"
+    try:
+        run_command(crtsh_cmd)
+        if temp_file.exists() and temp_file.stat().st_size > 0:
+            with open(temp_file, "r") as f:
+                results = [line.strip() for line in f if line.strip()]
+            unique_results = list(set(results))
+            print(f"[+] crt.sh found {len(unique_results)} unique subdomains")
+            temp_file.unlink()  # Clean up temporary file
+            return unique_results
+        else:
+            print("[!] crt.sh returned no data or file creation failed")
+            return []
+    except Exception as e:
+        print(f"[!] Error running crt.sh: {e}")
+        if temp_file.exists():
+            temp_file.unlink()
+        return []
 
 def run_gobuster(domain, wordlists, output_dir):
     """Run gobuster with multiple wordlists in line-by-line format."""
@@ -178,9 +190,7 @@ def run_httpx(input_file, output_dir, detailed=False):
     for line in output:
         if line.strip():
             if detailed:
-                # JSON output for detailed mode
                 try:
-                    # Extract URL, status code, title, and technologies from JSON
                     data = json.loads(line)
                     url = data.get("url", "").strip()
                     status_code = data.get("status_code", "Unknown")
@@ -192,7 +202,6 @@ def run_httpx(input_file, output_dir, detailed=False):
                     if url:
                         live_subdomains.append(url)
                         status_codes[url] = status_code
-                        # Exclude redirects (301/302) from detailed output
                         if status_code not in [301, 302]:
                             clean_line = f"{url} [{status_code}] [{title}] [{tech_list}]"
                             if version_info:
@@ -201,7 +210,6 @@ def run_httpx(input_file, output_dir, detailed=False):
                 except json.JSONDecodeError:
                     continue
             else:
-                # Non-detailed mode: parse standard output
                 if " [" in line and "]" in line:
                     url = line.split(" [")[0].strip()
                     status_part = line.split(" [")[1].split("]")[0]
@@ -215,15 +223,12 @@ def run_httpx(input_file, output_dir, detailed=False):
     # Save clean URLs to file
     live_file = output_dir / "live_subdomains.txt"
     if live_subdomains:
-        with open(live_file, "w") as f:
-            for url in live_subdomains:
-                f.write(url + "\n")
+        live_file.write_text("\n".join(live_subdomains) + "\n")
     
     # Save detailed results (excluding redirects, no color codes) if requested
     if detailed and detailed_output:
         detailed_file = output_dir / "detailed_results.txt"
-        with open(detailed_file, "w") as f:
-            f.write("\n".join(detailed_output) + "\n")
+        detailed_file.write_text("\n".join(detailed_output) + "\n")
     
     print(f"\n📊 Results: {len(live_subdomains)} live subdomains found")
     print("\n🌐 Live Subdomains:")
@@ -249,7 +254,7 @@ def web_crawl(input_file, output_dir):
     crawl_file = output_dir / "crawled_urls.txt"
     katana_cmd = f"katana -list {input_file} -concurrency 10 -silent -jc -output {crawl_file}"
     run_command(katana_cmd, crawl_file)
-    if os.path.exists(crawl_file):
+    if crawl_file.exists():
         with open(crawl_file) as f:
             crawled_urls = [line.strip() for line in f if line.strip()]
         print(f"\n📊 Results: {len(crawled_urls)} URLs found")
@@ -264,7 +269,7 @@ def web_crawl(input_file, output_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Tyson All-in-One Recon Toolkit")
-    parser.add_argument("-t", "--target", required=True, help="Target domain (e.g., tesla.com)")
+    parser.add_argument("-t", "--target", help="Target domain (e.g., tesla.com)", default=None)
     parser.add_argument("-s", action="store_true", help="Perform subdomain enumeration")
     parser.add_argument("-l", action="store_true", help="Perform live subdomain check")
     parser.add_argument("-wc", action="store_true", help="Perform web crawling")
@@ -273,7 +278,15 @@ def main():
     parser.add_argument("-i", "--input", help="Input file for live check or web crawl (e.g., domains.txt)")
     args = parser.parse_args()
 
+    # Infer target from input file if not provided
     target = args.target
+    if not target and args.input:
+        target = Path(args.input).parts[1].split('_')[0]  # Extract domain from path like 'results/tesla.com_20250712_193528/domains.txt'
+
+    if not target:
+        print(f"[!] Target domain required. Use -t or provide a valid input file with -i")
+        return
+
     print(f"[+] Starting Tyson recon for {target}")
 
     # Setup output
