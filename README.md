@@ -1,33 +1,36 @@
-# tyson
-All in one tool for doing recon.
+# 🥊 Tyson — All-in-One Recon Toolkit
 
-# Subdomain Enumeration Toolkit
+**Tyson** is a modular recon automation framework combining `subfinder`, `assetfinder`, `gobuster`, and `httpx` for comprehensive subdomain discovery and live checking.
 
-This toolkit provides a comprehensive subdomain enumeration and live checking solution using subfinder, assetfinder, gobuster, and httpx.
+---
 
-## Features
+## 🚀 Features
 
-- **Subdomain Discovery**: Uses multiple tools (subfinder, assetfinder, gobuster) for comprehensive coverage
-- **Live Checking**: Automated httpx scanning with status codes and filtering
-- **Detailed Analysis**: Optional detailed mode with titles, technology detection, and version information
-- **Organized Output**: Timestamped results directories for easy management
-- **Rate Limiting**: Built-in protection to prevent overwhelming target servers
+- 🔍 Subdomain enumeration via multiple tools (subfinder, assetfinder, gobuster)
+- 🌐 Live status checking with status code breakdown
+- 🧠 Detailed mode: tech stack, page titles, version info
+- 🗂️ Organized, timestamped result directories
+- 🛡️ Rate-limiting built-in (50 req/sec)
 
-## Usage
+---
 
-### Step 1: Subdomain Enumeration
+## 📦 Installation
 
-To enumerate subdomains and save them to `domains.txt`:
+### Requirements
 
-```bash
-python3 subdomain_enum.py <target-domain>
-```
+- **Python 3.x**
+- **Go (latest)**
+- Tools:
+  ```bash
+  go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+  go install github.com/tomnomnom/assetfinder@latest
+  sudo apt install gobuster
+  go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 
-**Example:**
+🧰 Subdomain Enumeration Usage
+🔹 Basic Usage
 
-```bash
-python3 subdomain_enum.py canterbury.ac.nz
-```
+python3 subdomain_enum.py -t example.com
 
 This will:
 - Run subfinder, assetfinder, and gobuster
@@ -151,15 +154,3 @@ Make sure your Go bin directory is in your PATH:
 ```bash
 export PATH=$PATH:~/go/bin
 ```
-Example Usages
-
-    Subdomain Enumeration:
-        python tyson.py -s tesla.com
-        Saves to results/tesla.com_<timestamp>/domains.txt.
-    Live Check (Basic):
-        python tyson.py -l -i results/tesla.com_<timestamp>/domains.txt
-        Infers tesla.com from the input file.
-    Live Check (Detailed):
-        python tyson.py -l -d -i results/tesla.com_<timestamp>/domains.txt
-    Web Crawl:
-        python tyson.py -wc -i results/tesla.com_<timestamp>/live_subdomains.txt
